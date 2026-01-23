@@ -1,5 +1,5 @@
 /*
-See LICENSE folder for this sample’s licensing information.
+See the LICENSE.txt file for this sample’s licensing information.
 
 Abstract:
 The app delegate that sets up and starts the virtual machine.
@@ -7,7 +7,7 @@ The app delegate that sets up and starts the virtual machine.
 
 import Virtualization
 
-let vmBundlePath = NSHomeDirectory() + "/LinuxVM.bundle/"
+let vmBundlePath = NSHomeDirectory() + "/VM/linux-vm.bundle/"
 let mainDiskImagePath = vmBundlePath + "Disk.img"
 let efiVariableStorePath = vmBundlePath + "NVRAM"
 let machineIdentifierPath = vmBundlePath + "MachineIdentifier"
@@ -31,9 +31,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
 
     private func createVMBundle() {
         do {
-            try FileManager.default.createDirectory(atPath: vmBundlePath, withIntermediateDirectories: false)
+            try FileManager.default.createDirectory(atPath: vmBundlePath, withIntermediateDirectories: true)
         } catch {
-            fatalError("Failed to create “GUI Linux VM.bundle.”")
+            fatalError("Failed to create “linux-vm.bundle”")
         }
     }
 
@@ -78,7 +78,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
     }
 
     private func computeMemorySize() -> UInt64 {
-        var memorySize = (4 * 1024 * 1024 * 1024) as UInt64 // 4 GiB
+        var memorySize = (8 * 1024 * 1024 * 1024) as UInt64 // 8 GiB
         memorySize = max(memorySize, VZVirtualMachineConfiguration.minimumAllowedMemorySize)
         memorySize = min(memorySize, VZVirtualMachineConfiguration.maximumAllowedMemorySize)
 
@@ -140,7 +140,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
     private func createGraphicsDeviceConfiguration() -> VZVirtioGraphicsDeviceConfiguration {
         let graphicsDevice = VZVirtioGraphicsDeviceConfiguration()
         graphicsDevice.scanouts = [
-            VZVirtioGraphicsScanoutConfiguration(widthInPixels: 1920, heightInPixels: 1080)
+            VZVirtioGraphicsScanoutConfiguration(widthInPixels: 1280, heightInPixels: 720)
         ]
 
         return graphicsDevice
@@ -230,6 +230,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
         DispatchQueue.main.async {
             self.createVirtualMachine()
             self.virtualMachineView.virtualMachine = self.virtualMachine
+
+            if #available(macOS 14.0, *) {
+                // Configure the app to automatically respond changes in the display size.
+                self.virtualMachineView.automaticallyReconfiguresDisplay = true
+            }
+
             self.virtualMachine.delegate = self
             self.virtualMachine.start(completionHandler: { (result) in
                 switch result {
@@ -246,10 +252,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         NSApp.activate(ignoringOtherApps: true)
 
-        // If "GUI Linux VM.bundle" doesn't exist, the sample app tries to create
+        // If "linux-vm.bundle" doesn't exist, the sample app tries to create
         // one and install Linux onto an empty disk image from the ISO image,
         // otherwise, it tries to directly boot from the disk image inside
-        // the "GUI Linux VM.bundle".
+        // the "linux-vm.bundle".
         if !FileManager.default.fileExists(atPath: vmBundlePath) {
             needsInstall = true
             createVMBundle()

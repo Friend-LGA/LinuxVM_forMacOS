@@ -2,13 +2,11 @@
 
 Install and run GUI Linux in a virtual machine using the Virtualization framework.
 
-- [Source](https://developer.apple.com/documentation/virtualization/running_gui_linux_in_a_virtual_machine_on_a_mac)
-
 ## Overview
 
 This sample code project demonstrates how to install and run GUI Linux virtual machines (VMs) on a Mac.
 
-The Xcode project includes a single target, `GUILinuxVirtualMachineSampleApp`, which is a macOS app that installs a Linux distribution from an ISO image into a VM, and subsequently runs the installed Linux VM.
+The Xcode project includes a single target, `UbuntuVM`, which is a macOS app that installs a Linux distribution from an ISO image into a VM, and subsequently runs the installed Linux VM.
 
 [class_VZVirtualMachineConfiguration]:https://developer.apple.com/documentation/virtualization/vzvirtualmachineconfiguration
 [class_VZLinuxBootLoader]:https://developer.apple.com/documentation/virtualization/vzlinuxbootloader
@@ -17,7 +15,7 @@ The Xcode project includes a single target, `GUILinuxVirtualMachineSampleApp`, w
 [method_start]:https://developer.apple.com/documentation/virtualization/vzvirtualmachine/3656826-start
 [method_guestDidStop]:https://developer.apple.com/documentation/virtualization/vzvirtualmachinedelegate/3656730-guestdidstop
 
-## Download a Linux installation image
+## Download a Linux installation image 
 
 Before you run the sample program, you need to download an ISO installation image from a Linux distribution website. Some common Linux distributions include:
 
@@ -33,23 +31,25 @@ Before you run the sample program, you need to download an ISO installation imag
 
 ## Configure the sample code project
 
-1. Launch Xcode and open `GUILinuxVirtualMachineSampleApp.xcodeproj`.
+- Note: The default deployment target is macOS14, if you need to build for a different version of macOS you’ll need to change the deployment target as appropriate.
+
+1. Launch Xcode and open `UbuntuVM.xcodeproj`.
 
 2. Navigate to the Signing & Capabilities panel and select your team ID.
 
-3. Build and run GUILinuxVirtualMachineSampleApp. The sample app starts the VM and configures a graphical view that you interact with. The Linux VM continues running until you shut it down from the guest OS, or when you quit the app.
+3. Build and run UbuntuVM. The sample app starts the VM and configures a graphical view that you interact with. The Linux VM continues running until you shut it down from the guest OS, or when you quit the app.
 
     When you run the app for the first time, it displays a file picker so you can choose the Linux installation ISO image to use for installing your Linux VM. Navigate to the ISO image that you downloaded, select the file, and click Open. The VM boots into the OS installer, and the installer's user interface appears in the app's window. Follow the installation instructions. When the installation finishes, the Linux VM is ready to use.
 
      As part of the installation process, the Virtualization framework creates a `GUI Linux VM.bundle` package in your home directory. The sample app only supports running one VM at a time, however, the Virtualization framework supports running multiple VMs simultaneously. Running multiple VMs requires an app to manage the execution and artifacts of each individual VM.
-
+    
     The contents of the bundle represent the state of the Linux guest, and contain the following:
 
     * `Disk.img` — The main disk image of the installed Linux OS.
     * `MachineIdentifier` — The data representation of the `VZGenericMachineIdentifier` object.
     * `NVRAM` — The EFI variable store.
 
-    Subsequent launches of GUILinuxVirtualMachineSampleApp run the installed Linux VM. To reinstall the VM, delete the `GUI Linux VM.bundle` package and run the app again.
+    Subsequent launches of UbuntuVM run the installed Linux VM. To reinstall the VM, delete the `GUI Linux VM.bundle` package and run the app again.
 
 
 ## Install GUI Linux from an ISO image
@@ -143,6 +143,12 @@ Before calling the VM's [`start`][method_start] method, the sample app configure
 
 ``` swift
 self.virtualMachineView.virtualMachine = self.virtualMachine
+
+if #available(macOS 14.0, *) {
+    // Configure the app to automatically respond changes in the display size.
+    self.virtualMachineView.automaticallyReconfiguresDisplay = true
+}
+
 self.virtualMachine.delegate = self
 self.virtualMachine.start(completionHandler: { (result) in
     switch result {
@@ -154,3 +160,5 @@ self.virtualMachine.start(completionHandler: { (result) in
     }
 })
 ```
+
+The app sets the display to automatically resize when the window size changes.
